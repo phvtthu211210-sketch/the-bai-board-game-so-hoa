@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Thẻ Bài Trí Tuệ Socratic & Phân Tích AI</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--secondary-color);
+            margin-bottom: 20px;
+        }
+
+        /* Controls Section */
+        .control-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        select, button {
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        select {
+            background-color: #fff;
+            cursor: pointer;
+        }
+
+        .btn-draw {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
+        }
+
+        .btn-draw:hover {
+            background-color: #357abd;
+            transform: translateY(-2px);
+        }
+
+        /* 3D Card Flip Container */
+        .card-container {
+            perspective: 1000px;
+            width: 100%;
+            max-width: 550px;
+            height: 380px;
+            margin: 0 auto;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 16px;
+            padding: 25px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: var(--card-bg);
+            border: 2px solid #e1e8ed;
+        }
+
+        /* Back of card default style */
+        .card-back {
+            transform: rotateY(180deg);
+            background: #fafafa;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+            font-size: 14px;
+            color: #7f8c8d;
+            font-weight: bold;
+        }
+
+        .card-body {
+            font-size: 18px;
+            color: #333;
+            line-height: 1.6;
+            margin: 15px 0;
+            overflow-y: auto;
+            text-align: left;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-sub {
+            padding: 8px 14px;
+            font-size: 13px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-hint {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .btn-answer {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-sub:hover {
+            opacity: 0.9;
+        }
+
+        .content-box {
+            display: none;
+            text-align: left;
+            background: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        /* Message display */
+        #status-msg {
+            color: #7f8c8d;
+            font-style: italic;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Hệ Thống Thẻ Bài Học Tập Socratic</h1>
+
+    <!-- Panel Điều Khiển -->
+    <div class="control-panel">
+        <select id="gradeSelect">
+            <option value="">-- Chọn Khối Lớp --</option>
+            <option value="10">Khối 10</option>
+            <option value="11">Khối 11</option>
+            <option value="12">Khối 12</option>
+        </select>
+
+        <select id="subjectSelect">
+            <option value="">-- Chọn Môn Học --</option>
+            <option value="Toan">Môn Toán</option>
+            <option value="Van">Môn Ngữ Văn</option>
+            <option value="Anh">Môn Tiếng Anh</option>
+            <option value="Ly">Môn Vật Lý</option>
+            <option value="Hoa">Môn Hóa Học</option>
+        </select>
+
+        <button class="btn-draw" onclick="drawCard()">🎲 Rút Thẻ Ngẫu Nhiên</button>
+    </div>
+
+    <!-- Khung Thẻ Bài 3D -->
+    <div class="card-container">
+        <div class="card" id="cardElement">
+            
+            <!-- Mặt Trước Thẻ Bài -->
+            <div class="card-front">
+                <div class="card-header">
+                    <span id="frontMeta">Môn Học - Lớp</span>
+                    <span>#SOCRATIC</span>
+                </div>
+                <div class="card-body" id="cardQuestion">
+                    Vui lòng chọn Khối Lớp, Môn Học và nhấn "Rút Thẻ Ngẫu Nhiên" để bắt đầu thử thách!
+                </div>
+                <div class="card-actions">
+                    <button class="btn-sub btn-hint" onclick="showSection('hint')">💡 Gợi Ý Socratic</button>
+                    <button class="btn-sub btn-answer" onclick="flipToBack()">🔍 Đáp Án & Ảo Giác AI</button>
+                </div>
+            </div>
+
+            <!-- Mặt Sau Thẻ Bài (Đáp án & Ảo giác AI) -->
+            <div class="card-back">
+                <div class="card-header">
+                    <span>Phân Tích Chi Tiết</span>
+                    <button onclick="flipToFront()" style="padding: 2px 8px; font-size: 12px;">↩ Quay lại</button>
+                </div>
+                <div class="card-body">
+                    <strong style="color: #c0392b;">⚠️ Ảo giác AI thường gặp:</strong>
+                    <p id="aiHallucinationText" style="font-size: 14px; margin-top: 5px;">...</p>
+                    
+                    <strong style="color: #27ae60; margin-top: 10px; display: block;">✅ Đáp án chuẩn xác:</strong>
+                    <p id="correctAnswerText" style="font-size: 14px; margin-top: 5px;">...</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Khung Hiển Thị Gợi Ý Socratic (Bên dưới thẻ) -->
+    <div id="hintBox" class="content-box" style="margin-top: 20px;">
+        <strong>💡 Gợi ý tư duy Socratic:</strong>
+        <p id="hintText" style="margin: 5px 0 0 0;">...</p>
+    </div>
+
+    <div id="status-msg"></div>
+</div>
+
+<script>
+    // URL Web App từ Google Apps Script của nhóm (thay thế URL thực tế vào đây)
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+
+    // Biến lưu trữ dữ liệu câu hỏi từ API
+    let questionsDatabase = [];
+    let currentCard = null;
+
+    // Fetch dữ liệu câu hỏi khi tải trang
+    async function loadQuestions() {
+        const msg = document.getElementById('status-msg');
+        msg.innerText = 'Đang đồng bộ dữ liệu thẻ bài từ hệ thống...';
+        
+        try {
+            const response = await fetch(APPS_SCRIPT_URL);
+            questionsDatabase = await response.json();
+            msg.innerText = 'Dữ liệu đã sẵn sàng!';
+            setTimeout(() => msg.innerText = '', 3000);
+        } catch (error) {
+            console.error('Lỗi kết nối dữ liệu:', error);
+            msg.innerText = 'Sử dụng dữ liệu tạm thời (Chưa kết nối API).';
+            // Dữ liệu mẫu dự phòng khi chưa gắn URL Google Apps Script
+            questionsDatabase = [
+                {
+                    grade: "10",
+                    subject: "Toan",
+                    question: "Cho hàm số y = ax² + bx + c. Làm thế nào để xác định tọa độ đỉnh của Parabol mà không bị nhầm lẫn dấu?",
+                    socraticHint: "Hãy nhớ lại công thức nghiệm của phương trình bậc 2. Hoành độ đỉnh x_0 có liên hệ gì với trục đối xứng?",
+                    aiHallucination: "AI thường tính sai dấu của b/2a thành b/a hoặc nhầm tọa độ đỉnh với giao điểm trục tung.",
+                    correctAnswer: "Tọa độ đỉnh I(-b / 2a; -Δ / 4a). Cần tính chính xác hoành độ trước rồi thế vào hàm số để tìm tung độ."
+                }
+            ];
+        }
+    }
+
+    // Hàm Rút Thẻ Ngẫu Nhiên
+    function drawCard() {
+        const grade = document.getElementById('gradeSelect').value;
+        const subject = document.getElementById('subjectSelect').value;
+
+        if (!grade || !subject) {
+            alert('Vui lòng chọn đầy đủ Khối Lớp và Môn Học!');
+            return;
+        }
+
+        // Lọc danh sách câu hỏi theo 2 điều kiện
+        const filtered = questionsDatabase.filter(q => q.grade === grade && q.subject === subject);
+
+        if (filtered.length === 0) {
+            alert('Hiện chưa có thẻ bài phù hợp với bộ lọc này. Vui lòng chọn môn/lớp khác!');
+            return;
+        }
+
+        // Đưa thẻ về mặt trước nếu đang mở mặt sau
+        flipToFront();
+        document.getElementById('hintBox').style.display = 'none';
+
+        // Chọn ngẫu nhiên bằng Math.random()
+        const randomIndex = Math.floor(Math.random() * filtered.length);
+        currentCard = filtered[randomIndex];
+
+        // Cập nhật giao diện
+        document.getElementById('frontMeta').innerText = `Lớp ${currentCard.grade} - Môn ${currentCard.subject.toUpperCase()}`;
+        document.getElementById('cardQuestion').innerText = currentCard.question;
+        document.getElementById('hintText').innerText = currentCard.socraticHint;
+        document.getElementById('aiHallucinationText').innerText = currentCard.aiHallucination;
+        document.getElementById('correctAnswerText').innerText = currentCard.correctAnswer;
+    }
+
+    // Hiệu ứng Lật Thẻ
+    function flipToBack() {
+        if (!currentCard) {
+            alert('Hãy nhấn "Rút Thẻ Ngẫu Nhiên" trước!');
+            return;
+        }
+        document.getElementById('cardElement').classList.add('flipped');
+    }
+
+    function flipToFront() {
+        document.getElementById('cardElement').classList.remove('flipped');
+    }
+
+    // Hiển thị khung gợi ý Socratic
+    function showSection(type) {
+        if (!currentCard) {
+            alert('Hãy nhấn "Rút Thẻ Ngẫu Nhiên" trước!');
+            return;
+        }
+        if (type === 'hint') {
+            const hintBox = document.getElementById('hintBox');
+            hintBox.style.display = hintBox.style.display === 'block' ? 'none' : 'block';
+        }
+    }
+
+    // Khởi chạy khi load trang
+    window.onload = loadQuestions;
+</script>
+
+</body>
+</html>
