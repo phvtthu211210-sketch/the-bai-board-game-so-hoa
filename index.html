@@ -138,6 +138,11 @@
             text-align: left;
         }
 
+        /* Tăng kích cỡ chữ và nổi bật cho phần giải thích ở mặt sau */
+        .card-back .card-body {
+            font-size: 16px;
+        }
+
         .card-actions {
             display: flex;
             gap: 10px;
@@ -175,7 +180,7 @@
             border-radius: 8px;
             border-left: 4px solid #27ae60;
             margin-top: 10px;
-            font-size: 14px;
+            font-size: 15px;
         }
 
         #status-msg {
@@ -231,18 +236,15 @@
                 </div>
             </div>
 
-            <!-- Mặt Sau Thẻ Bài -->
+            <!-- Mặt Sau Thẻ Bài (Chỉ giữ Giải thích chi tiết & Bài học) -->
             <div class="card-back">
                 <div class="card-header">
-                    <span>Phân Tích Chi Tiết & Ảo Giác AI</span>
+                    <span>Phân Tích Chi Tiết</span>
                     <button onclick="flipToFront()" style="padding: 2px 8px; font-size: 12px;">↩ Quay lại</button>
                 </div>
                 <div class="card-body">
-                    <strong style="color: #c0392b;">⚠️ Phân tích bẫy lỗi / Ảo giác AI:</strong>
-                    <p id="aiHallucinationText" style="font-size: 14px; margin-top: 5px; margin-bottom: 15px;">...</p>
-                    
-                    <strong style="color: #2980b9; display: block;">📝 Giải thích chi tiết & Bài học:</strong>
-                    <p id="detailedExplanationText" style="font-size: 14px; margin-top: 5px;">...</p>
+                    <strong style="color: #2980b9; display: block; font-size: 17px; margin-bottom: 8px;">📝 Giải thích chi tiết & Bài học:</strong>
+                    <p id="detailedExplanationText" style="font-size: 16px; line-height: 1.7; margin-top: 0; color: #2c3e50;">...</p>
                 </div>
             </div>
 
@@ -252,7 +254,7 @@
     <!-- Khung Hiển Thị Đáp Án Socratic -->
     <div id="answerBox" class="content-box" style="margin-top: 20px;">
         <strong>✅ Kết luận đáp án:</strong>
-        <p id="correctAnswerText" style="margin: 5px 0 0 0; font-weight: bold; color: #27ae60;">...</p>
+        <p id="correctAnswerText" style="margin: 5px 0 0 0; font-weight: bold; color: #27ae60; font-size: 16px;">...</p>
     </div>
 
     <div id="status-msg"></div>
@@ -265,7 +267,7 @@
     let questionsDatabase = [];
     let currentCard = null;
 
-    // Chuẩn hóa tên môn học để so sánh tuyệt đối không bị lệch
+    // Chuẩn hóa tên môn học để so sánh
     function normalizeSubject(str) {
         if (!str) return '';
         str = str.toString().trim().toLowerCase();
@@ -313,7 +315,7 @@
             return;
         }
 
-        // Lọc câu hỏi thông minh theo Lớp và Môn
+        // Lọc câu hỏi theo Lớp và Môn
         const filtered = questionsDatabase.filter(q => {
             const qGrade = q.grade ? q.grade.toString().trim() : '';
             const qSubject = normalizeSubject(q.subject);
@@ -334,7 +336,6 @@
         document.getElementById('frontMeta').innerText = `Lớp ${currentCard.grade} - Môn ${getSubjectName(currentCard.subject)}`;
         document.getElementById('cardQuestion').innerText = currentCard.question;
         document.getElementById('correctAnswerText').innerText = currentCard.correctAnswer;
-        document.getElementById('aiHallucinationText').innerText = currentCard.aiHallucination || 'AI dễ mắc lỗi vội vàng hoặc hiểu sai bối cảnh.';
         document.getElementById('detailedExplanationText').innerText = currentCard.detailedExplanation || 'Chưa có giải thích chi tiết.';
     }
 
