@@ -182,6 +182,7 @@
             color: #7f8c8d;
             font-style: italic;
             margin-top: 15px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -258,13 +259,24 @@
 </div>
 
 <script>
-    // Dán URL Web App copy từ Apps Script vào đây
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzgJzsfQ2LWgtG7_FBabwm1wmCOjoBEEVsGncwmL3IdhvA4NhSAxD48HFIXyYRtFFJw8g/exec';
+    // DÁN WEB APP URL LẤY TỪ GOOGLE APPS SCRIPT VÀO GIỮA DẤU NHÁY ĐƠN DƯỚI ĐÂY:
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxP6O-qFubMVsDPGJHi1_DupYiznllES9xmMgi9UhBF37BBGDlRIHS2Jx8KGMJR0sCiXw/exec';
 
     let questionsDatabase = [];
     let currentCard = null;
 
-    // Tự động tải 225 câu hỏi từ Google Sheet
+    // Chuẩn hóa tên môn học để so sánh tuyệt đối không bị lệch
+    function normalizeSubject(str) {
+        if (!str) return '';
+        str = str.toString().trim().toLowerCase();
+        if (str.includes('toán') || str.includes('toan')) return 'toan';
+        if (str.includes('lý') || str.includes('ly')) return 'ly';
+        if (str.includes('hóa') || str.includes('hoa')) return 'hoa';
+        if (str.includes('sinh')) return 'sinh';
+        if (str.includes('văn') || str.includes('van')) return 'van';
+        return str;
+    }
+
     async function loadQuestions() {
         const msg = document.getElementById('status-msg');
         msg.innerText = 'Đang đồng bộ 225 câu hỏi từ hệ thống...';
@@ -272,51 +284,62 @@
         try {
             const response = await fetch(APPS_SCRIPT_URL);
             questionsDatabase = await response.json();
-            msg.innerText = 'Đã tải thành công 225 câu hỏi!';
-            setTimeout(() => msg.innerText = '', 3000);
+            
+            if (Array.isArray(questionsDatabase) && questionsDatabase.length > 0) {
+                msg.innerText = `Đã tải thành công ${questionsDatabase.length} câu hỏi!`;
+                msg.style.color = '#27ae60';
+            } else {
+                msg.innerText = 'Dữ liệu trả về rỗng, vui lòng kiểm tra lại Google Sheet.';
+                msg.style.color = '#c0392b';
+            }
         } catch (error) {
             console.error('Lỗi tải dữ liệu:', error);
-            msg.innerText = 'Chưa dán URL Web App hợp lệ.';
+            msg.innerText = 'Chưa dán URL Web App hợp lệ từ Apps Script.';
+            msg.style.color = '#c0392b';
         }
     }
 
-    // Hàm Rút Thẻ Ngẫu Nhiên
     function drawCard() {
-        const grade = document.getElementById('gradeSelect').value;
-        const subject = document.getElementById('subjectSelect').value;
+        const grade = document.getElementById('gradeSelect').value.toString().trim();
+        const subject = normalizeSubject(document.getElementById('subjectSelect').value);
 
         if (!grade || !subject) {
             alert('Vui lòng chọn đầy đủ Khối Lớp và Môn Học!');
             return;
         }
 
-        // Lọc câu hỏi khớp chính xác theo Lớp và Môn
-        const filtered = questionsDatabase.filter(q => 
-            q.grade.toString().trim() === grade && 
-            q.subject.toString().trim().toLowerCase() === subject.toLowerCase()
-        );
+        if (questionsDatabase.length === 0) {
+            alert('Dữ liệu chưa kết nối thành công! Kiểm tra dòng thông báo màu đỏ bên dưới.');
+            return;
+        }
+
+        // Lọc câu hỏi thông minh theo Lớp và Môn
+        const filtered = questionsDatabase.filter(q => {
+            const qGrade = q.grade ? q.grade.toString().trim() : '';
+            const qSubject = normalizeSubject(q.subject);
+            return qGrade === grade && qSubject === subject;
+        });
 
         if (filtered.length === 0) {
-            alert('Hiện chưa có dữ liệu thẻ bài phù hợp với bộ lọc này!');
+            alert(`Không tìm thấy câu hỏi cho Lớp ${grade} - Môn ${subject.toUpperCase()}. Kiểm tra lại cột grade/subject trên Google Sheet!`);
             return;
         }
 
         flipToFront();
         document.getElementById('answerBox').style.display = 'none';
 
-        // Lấy ngẫu nhiên 1 câu
         const randomIndex = Math.floor(Math.random() * filtered.length);
         currentCard = filtered[randomIndex];
 
-        // Đổ dữ liệu lên thẻ bài
         document.getElementById('frontMeta').innerText = `Lớp ${currentCard.grade} - Môn ${getSubjectName(currentCard.subject)}`;
         document.getElementById('cardQuestion').innerText = currentCard.question;
         document.getElementById('correctAnswerText').innerText = currentCard.correctAnswer;
-        document.getElementById('aiHallucinationText').innerText = currentCard.aiHallucination || 'AI dễ gặp lỗi vội vàng hoặc hiểu sai bối cảnh kiến thức.';
-        document.getElementById('detailedExplanationText').innerText = currentCard.detailedExplanation || 'Chưa có bài giải chi tiết.';
+        document.getElementById('aiHallucinationText').innerText = currentCard.aiHallucination || 'AI dễ mắc lỗi vội vàng hoặc hiểu sai bối cảnh.';
+        document.getElementById('detailedExplanationText').innerText = currentCard.detailedExplanation || 'Chưa có giải thích chi tiết.';
     }
 
     function getSubjectName(code) {
+        const norm = normalizeSubject(code);
         const names = {
             'toan': 'TOÁN HỌC',
             'ly': 'VẬT LÝ',
@@ -324,7 +347,7 @@
             'sinh': 'SINH HỌC',
             'van': 'NGỮ VĂN'
         };
-        return names[code.toString().toLowerCase()] || code.toUpperCase();
+        return names[norm] || code.toUpperCase();
     }
 
     function flipToBack() {
