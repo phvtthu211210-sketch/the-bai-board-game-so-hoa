@@ -34,7 +34,7 @@
             margin-bottom: 20px;
         }
 
-        /* Controls Section */
+        /* Panel Điều Khiển */
         .control-panel {
             background: white;
             padding: 20px;
@@ -75,7 +75,7 @@
             transform: translateY(-2px);
         }
 
-        /* 3D Card Flip Container */
+        /* Khung Thẻ Bài 3D */
         .card-container {
             perspective: 1000px;
             width: 100%;
@@ -113,7 +113,6 @@
             border: 2px solid #e1e8ed;
         }
 
-        /* Back of card default style */
         .card-back {
             transform: rotateY(180deg);
             background: #fafafa;
@@ -131,7 +130,7 @@
         }
 
         .card-body {
-            font-size: 18px;
+            font-size: 17px;
             color: #333;
             line-height: 1.6;
             margin: 15px 0;
@@ -179,7 +178,6 @@
             font-size: 14px;
         }
 
-        /* Message display */
         #status-msg {
             color: #7f8c8d;
             font-style: italic;
@@ -232,14 +230,14 @@
                 </div>
             </div>
 
-            <!-- Mặt Sau Thẻ Bài (Giải thích chi tiết & Ảo giác AI) -->
+            <!-- Mặt Sau Thẻ Bài -->
             <div class="card-back">
                 <div class="card-header">
                     <span>Phân Tích Chi Tiết & Ảo Giác AI</span>
                     <button onclick="flipToFront()" style="padding: 2px 8px; font-size: 12px;">↩ Quay lại</button>
                 </div>
                 <div class="card-body">
-                    <strong style="color: #c0392b;">⚠️ Ảo giác AI thường gặp:</strong>
+                    <strong style="color: #c0392b;">⚠️ Phân tích bẫy lỗi / Ảo giác AI:</strong>
                     <p id="aiHallucinationText" style="font-size: 14px; margin-top: 5px; margin-bottom: 15px;">...</p>
                     
                     <strong style="color: #2980b9; display: block;">📝 Giải thích chi tiết & Bài học:</strong>
@@ -250,47 +248,35 @@
         </div>
     </div>
 
-    <!-- Khung Hiển Thị Đáp Án Socratic (Bên dưới thẻ) -->
+    <!-- Khung Hiển Thị Đáp Án Socratic -->
     <div id="answerBox" class="content-box" style="margin-top: 20px;">
-        <strong>✅ Đáp án chuẩn xác:</strong>
-        <p id="correctAnswerText" style="margin: 5px 0 0 0;">...</p>
+        <strong>✅ Kết luận đáp án:</strong>
+        <p id="correctAnswerText" style="margin: 5px 0 0 0; font-weight: bold; color: #27ae60;">...</p>
     </div>
 
     <div id="status-msg"></div>
 </div>
 
 <script>
-    // URL Web App từ Google Apps Script của nhóm (thay thế URL thực tế vào đây)
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+    // Dán URL Web App copy từ Apps Script vào đây
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzgJzsfQ2LWgtG7_FBabwm1wmCOjoBEEVsGncwmL3IdhvA4NhSAxD48HFIXyYRtFFJw8g/exec';
 
-    // Biến lưu trữ dữ liệu câu hỏi từ API
     let questionsDatabase = [];
     let currentCard = null;
 
-    // Fetch dữ liệu câu hỏi khi tải trang
+    // Tự động tải 225 câu hỏi từ Google Sheet
     async function loadQuestions() {
         const msg = document.getElementById('status-msg');
-        msg.innerText = 'Đang đồng bộ dữ liệu thẻ bài từ hệ thống...';
+        msg.innerText = 'Đang đồng bộ 225 câu hỏi từ hệ thống...';
         
         try {
             const response = await fetch(APPS_SCRIPT_URL);
             questionsDatabase = await response.json();
-            msg.innerText = 'Dữ liệu đã sẵn sàng!';
+            msg.innerText = 'Đã tải thành công 225 câu hỏi!';
             setTimeout(() => msg.innerText = '', 3000);
         } catch (error) {
-            console.error('Lỗi kết nối dữ liệu:', error);
-            msg.innerText = 'Sử dụng dữ liệu tạm thời (Chưa kết nối API).';
-            // Dữ liệu mẫu dự phòng khi chưa gắn URL Google Apps Script
-            questionsDatabase = [
-                {
-                    grade: "10",
-                    subject: "Toan",
-                    question: "Cho hàm số y = ax² + bx + c. Làm thế nào để xác định tọa độ đỉnh của Parabol mà không bị nhầm lẫn dấu?",
-                    correctAnswer: "Tọa độ đỉnh I(-b / 2a; -Δ / 4a). Cần tính chính xác hoành độ x = -b/(2a) trước rồi thế vào hàm số để tìm tung độ y.",
-                    aiHallucination: "AI thường tính sai dấu của -b/(2a) thành b/(2a) hoặc nhầm tung độ đỉnh với giao điểm của parabol trên trục tung (c).",
-                    detailedExplanation: "Phương trình trục đối xứng là x = -b/(2a). Do đỉnh Parabol nằm trên trục đối xứng, hoành độ đỉnh luôn luôn mang dấu âm trước đại lượng b/(2a). Khi làm bài, học sinh và AI hay quên dấu trừ hoặc nhân nhầm 2a thành a."
-                }
-            ];
+            console.error('Lỗi tải dữ liệu:', error);
+            msg.innerText = 'Chưa dán URL Web App hợp lệ.';
         }
     }
 
@@ -304,43 +290,43 @@
             return;
         }
 
-        // Lọc danh sách câu hỏi theo 2 điều kiện
-        const filtered = questionsDatabase.filter(q => q.grade === grade && q.subject === subject);
+        // Lọc câu hỏi khớp chính xác theo Lớp và Môn
+        const filtered = questionsDatabase.filter(q => 
+            q.grade.toString().trim() === grade && 
+            q.subject.toString().trim().toLowerCase() === subject.toLowerCase()
+        );
 
         if (filtered.length === 0) {
-            alert('Hiện chưa có thẻ bài phù hợp với bộ lọc này. Vui lòng chọn môn/lớp khác!');
+            alert('Hiện chưa có dữ liệu thẻ bài phù hợp với bộ lọc này!');
             return;
         }
 
-        // Đưa thẻ về mặt trước nếu đang mở mặt sau
         flipToFront();
         document.getElementById('answerBox').style.display = 'none';
 
-        // Chọn ngẫu nhiên bằng Math.random()
+        // Lấy ngẫu nhiên 1 câu
         const randomIndex = Math.floor(Math.random() * filtered.length);
         currentCard = filtered[randomIndex];
 
-        // Cập nhật giao diện
+        // Đổ dữ liệu lên thẻ bài
         document.getElementById('frontMeta').innerText = `Lớp ${currentCard.grade} - Môn ${getSubjectName(currentCard.subject)}`;
         document.getElementById('cardQuestion').innerText = currentCard.question;
         document.getElementById('correctAnswerText').innerText = currentCard.correctAnswer;
-        document.getElementById('aiHallucinationText').innerText = currentCard.aiHallucination;
-        document.getElementById('detailedExplanationText').innerText = currentCard.detailedExplanation || currentCard.socraticHint || 'Chưa có giải thích chi tiết.';
+        document.getElementById('aiHallucinationText').innerText = currentCard.aiHallucination || 'AI dễ gặp lỗi vội vàng hoặc hiểu sai bối cảnh kiến thức.';
+        document.getElementById('detailedExplanationText').innerText = currentCard.detailedExplanation || 'Chưa có bài giải chi tiết.';
     }
 
-    // Chuyển đổi mã môn thành tên hiển thị
     function getSubjectName(code) {
         const names = {
-            'Toan': 'TOÁN HỌC',
-            'Ly': 'VẬT LÝ',
-            'Hoa': 'HÓA HỌC',
-            'Sinh': 'SINH HỌC',
-            'Van': 'NGỮ VĂN'
+            'toan': 'TOÁN HỌC',
+            'ly': 'VẬT LÝ',
+            'hoa': 'HÓA HỌC',
+            'sinh': 'SINH HỌC',
+            'van': 'NGỮ VĂN'
         };
-        return names[code] || code.toUpperCase();
+        return names[code.toString().toLowerCase()] || code.toUpperCase();
     }
 
-    // Hiệu ứng Lật Thẻ
     function flipToBack() {
         if (!currentCard) {
             alert('Hãy nhấn "Rút Thẻ Ngẫu Nhiên" trước!');
@@ -353,7 +339,6 @@
         document.getElementById('cardElement').classList.remove('flipped');
     }
 
-    // Hiển thị khung Đáp Án Socratic
     function showSection(type) {
         if (!currentCard) {
             alert('Hãy nhấn "Rút Thẻ Ngẫu Nhiên" trước!');
@@ -365,7 +350,6 @@
         }
     }
 
-    // Khởi chạy khi load trang
     window.onload = loadQuestions;
 </script>
 
