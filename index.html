@@ -154,13 +154,13 @@
             font-weight: 600;
         }
 
-        .btn-hint {
-            background-color: #f39c12;
+        .btn-answer {
+            background-color: #27ae60;
             color: white;
         }
 
-        .btn-answer {
-            background-color: #27ae60;
+        .btn-detail {
+            background-color: #8e44ad;
             color: white;
         }
 
@@ -174,7 +174,7 @@
             background: #fff;
             padding: 12px;
             border-radius: 8px;
-            border-left: 4px solid var(--primary-color);
+            border-left: 4px solid #27ae60;
             margin-top: 10px;
             font-size: 14px;
         }
@@ -204,10 +204,10 @@
         <select id="subjectSelect">
             <option value="">-- Chọn Môn Học --</option>
             <option value="Toan">Môn Toán</option>
-            <option value="Van">Môn Ngữ Văn</option>
-            <option value="Anh">Môn Tiếng Anh</option>
             <option value="Ly">Môn Vật Lý</option>
             <option value="Hoa">Môn Hóa Học</option>
+            <option value="Sinh">Môn Sinh Học</option>
+            <option value="Van">Môn Ngữ Văn</option>
         </select>
 
         <button class="btn-draw" onclick="drawCard()">🎲 Rút Thẻ Ngẫu Nhiên</button>
@@ -227,33 +227,33 @@
                     Vui lòng chọn Khối Lớp, Môn Học và nhấn "Rút Thẻ Ngẫu Nhiên" để bắt đầu thử thách!
                 </div>
                 <div class="card-actions">
-                    <button class="btn-sub btn-hint" onclick="showSection('hint')">💡 Gợi Ý Socratic</button>
-                    <button class="btn-sub btn-answer" onclick="flipToBack()">🔍 Đáp Án & Ảo Giác AI</button>
+                    <button class="btn-sub btn-answer" onclick="showSection('answer')">💡 Đáp Án Socratic</button>
+                    <button class="btn-sub btn-detail" onclick="flipToBack()">🔍 Phân Tích & Giải Thích Chi Tiết</button>
                 </div>
             </div>
 
-            <!-- Mặt Sau Thẻ Bài (Đáp án & Ảo giác AI) -->
+            <!-- Mặt Sau Thẻ Bài (Giải thích chi tiết & Ảo giác AI) -->
             <div class="card-back">
                 <div class="card-header">
-                    <span>Phân Tích Chi Tiết</span>
+                    <span>Phân Tích Chi Tiết & Ảo Giác AI</span>
                     <button onclick="flipToFront()" style="padding: 2px 8px; font-size: 12px;">↩ Quay lại</button>
                 </div>
                 <div class="card-body">
                     <strong style="color: #c0392b;">⚠️ Ảo giác AI thường gặp:</strong>
-                    <p id="aiHallucinationText" style="font-size: 14px; margin-top: 5px;">...</p>
+                    <p id="aiHallucinationText" style="font-size: 14px; margin-top: 5px; margin-bottom: 15px;">...</p>
                     
-                    <strong style="color: #27ae60; margin-top: 10px; display: block;">✅ Đáp án chuẩn xác:</strong>
-                    <p id="correctAnswerText" style="font-size: 14px; margin-top: 5px;">...</p>
+                    <strong style="color: #2980b9; display: block;">📝 Giải thích chi tiết & Bài học:</strong>
+                    <p id="detailedExplanationText" style="font-size: 14px; margin-top: 5px;">...</p>
                 </div>
             </div>
 
         </div>
     </div>
 
-    <!-- Khung Hiển Thị Gợi Ý Socratic (Bên dưới thẻ) -->
-    <div id="hintBox" class="content-box" style="margin-top: 20px;">
-        <strong>💡 Gợi ý tư duy Socratic:</strong>
-        <p id="hintText" style="margin: 5px 0 0 0;">...</p>
+    <!-- Khung Hiển Thị Đáp Án Socratic (Bên dưới thẻ) -->
+    <div id="answerBox" class="content-box" style="margin-top: 20px;">
+        <strong>✅ Đáp án chuẩn xác:</strong>
+        <p id="correctAnswerText" style="margin: 5px 0 0 0;">...</p>
     </div>
 
     <div id="status-msg"></div>
@@ -286,9 +286,9 @@
                     grade: "10",
                     subject: "Toan",
                     question: "Cho hàm số y = ax² + bx + c. Làm thế nào để xác định tọa độ đỉnh của Parabol mà không bị nhầm lẫn dấu?",
-                    socraticHint: "Hãy nhớ lại công thức nghiệm của phương trình bậc 2. Hoành độ đỉnh x_0 có liên hệ gì với trục đối xứng?",
-                    aiHallucination: "AI thường tính sai dấu của b/2a thành b/a hoặc nhầm tọa độ đỉnh với giao điểm trục tung.",
-                    correctAnswer: "Tọa độ đỉnh I(-b / 2a; -Δ / 4a). Cần tính chính xác hoành độ trước rồi thế vào hàm số để tìm tung độ."
+                    correctAnswer: "Tọa độ đỉnh I(-b / 2a; -Δ / 4a). Cần tính chính xác hoành độ x = -b/(2a) trước rồi thế vào hàm số để tìm tung độ y.",
+                    aiHallucination: "AI thường tính sai dấu của -b/(2a) thành b/(2a) hoặc nhầm tung độ đỉnh với giao điểm của parabol trên trục tung (c).",
+                    detailedExplanation: "Phương trình trục đối xứng là x = -b/(2a). Do đỉnh Parabol nằm trên trục đối xứng, hoành độ đỉnh luôn luôn mang dấu âm trước đại lượng b/(2a). Khi làm bài, học sinh và AI hay quên dấu trừ hoặc nhân nhầm 2a thành a."
                 }
             ];
         }
@@ -314,18 +314,30 @@
 
         // Đưa thẻ về mặt trước nếu đang mở mặt sau
         flipToFront();
-        document.getElementById('hintBox').style.display = 'none';
+        document.getElementById('answerBox').style.display = 'none';
 
         // Chọn ngẫu nhiên bằng Math.random()
         const randomIndex = Math.floor(Math.random() * filtered.length);
         currentCard = filtered[randomIndex];
 
         // Cập nhật giao diện
-        document.getElementById('frontMeta').innerText = `Lớp ${currentCard.grade} - Môn ${currentCard.subject.toUpperCase()}`;
+        document.getElementById('frontMeta').innerText = `Lớp ${currentCard.grade} - Môn ${getSubjectName(currentCard.subject)}`;
         document.getElementById('cardQuestion').innerText = currentCard.question;
-        document.getElementById('hintText').innerText = currentCard.socraticHint;
-        document.getElementById('aiHallucinationText').innerText = currentCard.aiHallucination;
         document.getElementById('correctAnswerText').innerText = currentCard.correctAnswer;
+        document.getElementById('aiHallucinationText').innerText = currentCard.aiHallucination;
+        document.getElementById('detailedExplanationText').innerText = currentCard.detailedExplanation || currentCard.socraticHint || 'Chưa có giải thích chi tiết.';
+    }
+
+    // Chuyển đổi mã môn thành tên hiển thị
+    function getSubjectName(code) {
+        const names = {
+            'Toan': 'TOÁN HỌC',
+            'Ly': 'VẬT LÝ',
+            'Hoa': 'HÓA HỌC',
+            'Sinh': 'SINH HỌC',
+            'Van': 'NGỮ VĂN'
+        };
+        return names[code] || code.toUpperCase();
     }
 
     // Hiệu ứng Lật Thẻ
@@ -341,15 +353,15 @@
         document.getElementById('cardElement').classList.remove('flipped');
     }
 
-    // Hiển thị khung gợi ý Socratic
+    // Hiển thị khung Đáp Án Socratic
     function showSection(type) {
         if (!currentCard) {
             alert('Hãy nhấn "Rút Thẻ Ngẫu Nhiên" trước!');
             return;
         }
-        if (type === 'hint') {
-            const hintBox = document.getElementById('hintBox');
-            hintBox.style.display = hintBox.style.display === 'block' ? 'none' : 'block';
+        if (type === 'answer') {
+            const answerBox = document.getElementById('answerBox');
+            answerBox.style.display = answerBox.style.display === 'block' ? 'none' : 'block';
         }
     }
 
