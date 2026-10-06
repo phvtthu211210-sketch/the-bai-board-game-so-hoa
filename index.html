@@ -4,6 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Thẻ Bài Trí Tuệ Socratic</title>
+    
+    <!-- Tích hợp thư viện MathJax đọc công thức Toán/Lý/Hóa chuẩn -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <style>
         :root {
             --primary-color: #4a90e2;
@@ -27,6 +41,7 @@
             max-width: 800px;
             width: 100%;
             text-align: center;
+            position: relative;
         }
 
         h1 {
@@ -44,6 +59,7 @@
             display: flex;
             gap: 15px;
             justify-content: center;
+            align-items: center;
             flex-wrap: wrap;
         }
 
@@ -72,6 +88,21 @@
 
         .btn-draw:hover {
             background-color: #357abd;
+            transform: translateY(-2px);
+        }
+
+        /* Nút Hướng Dẫn Chơi Nổi Nổi Mới */
+        .btn-guide {
+            background-color: #f39c12;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3);
+        }
+
+        .btn-guide:hover {
+            background-color: #d68910;
             transform: translateY(-2px);
         }
 
@@ -179,14 +210,12 @@
             transition: all 0.3s ease;
         }
 
-        /* Kiểu giao diện ĐÚNG (Xanh) */
         .content-box.correct {
             background: #e8f8f5;
             border-left: 5px solid #27ae60;
             color: #1e8449;
         }
 
-        /* Kiểu giao diện DỐI/SAI (Đỏ) */
         .content-box.wrong {
             background: #fadbd8;
             border-left: 5px solid #e74c3c;
@@ -199,12 +228,94 @@
             margin-top: 15px;
             font-weight: bold;
         }
+
+        /* STYLES CHO CỬA SỔ POPUP HƯỚNG DẪN CHƠI (MODAL) */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(3px);
+        }
+
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 600px;
+            max-height: 85vh;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow-y: auto;
+            text-align: left;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 20px;
+        }
+
+        .close-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+        }
+
+        .guide-step {
+            margin-bottom: 15px;
+            padding-left: 10px;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .guide-step h4 {
+            margin: 0 0 5px 0;
+            color: #2980b9;
+        }
+
+        .guide-step p {
+            margin: 0;
+            font-size: 14px;
+            color: #555;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Hệ Thống Thẻ Bài Board game AI vs.Human Mind</h1>
+    <h1>Hệ Thống Thẻ Bài Board game AI vs. Human Mind</h1>
 
     <!-- Panel Điều Khiển -->
     <div class="control-panel">
@@ -225,6 +336,7 @@
         </select>
 
         <button class="btn-draw" onclick="drawCard()">🎲 Rút Thẻ Ngẫu Nhiên</button>
+        <button class="btn-guide" onclick="openGuide()">📖 Hướng Dẫn Chơi</button>
     </div>
 
     <!-- Khung Thẻ Bài 3D -->
@@ -246,7 +358,7 @@
                 </div>
             </div>
 
-            <!-- Mặt Sau Thẻ Bài (Đã đẩy dòng giải thích lên trên cùng) -->
+            <!-- Mặt Sau Thẻ Bài -->
             <div class="card-back">
                 <div class="card-header">
                     <span>Phân Tích Chi Tiết</span>
@@ -270,6 +382,42 @@
     <div id="status-msg"></div>
 </div>
 
+<!-- POPUP HƯỚNG DẪN CHƠI BOARDGAME -->
+<div class="modal-overlay" id="guideModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>📜 Hướng Dẫn Chơi Boardgame "AI vs. Human Mind"</h2>
+            <button class="close-btn" onclick="closeGuide()">✕</button>
+        </div>
+        
+        <div class="guide-step">
+            <h4>Bước 1: Chọn Bộ Thẻ Bài</h4>
+            <p>Người chơi hoặc Đội trưởng chọn đúng **Khối Lớp (10, 11, 12)** và **Môn Học (Toán, Lý, Hóa, Sinh, Văn)** cần thử thách trên bảng điều khiển.</p>
+        </div>
+
+        <div class="guide-step">
+            <h4>Bước 2: Rút Thẻ & Đọc Luận Điểm AI</h4>
+            <p>Bấm **"🎲 Rút Thẻ Ngẫu Nhiên"**. Hệ thống xuất ra 1 luận điểm do AI đưa ra. Người chơi có 30 giây suy luận để phán đoán: **AI đang nói đúng** hay **AI đang nói dối**.</p>
+        </div>
+
+        <div class="guide-step">
+            <h4>Bước 3: Kiểm Tra Đáp Án Socratic</h4>
+            <p>Bấm nút **"💡 Đáp Án Socratic"** bên dưới thẻ để đối chiếu kết luận:
+               <br>• Khung **Xanh ✅**: AI đưa ra phát biểu đúng chuẩn kiến thức.
+               <br>• Khung **Đỏ ❌**: AI đang nói dối/bị bẫy ảo giác kiến thức.</p>
+        </div>
+
+        <div class="guide-step">
+            <h4>Bước 4: Phân Tích & Rút Ra Bài Học</h4>
+            <p>Bấm **"🔍 Giải Thích Chi Tiết"** để lật mặt sau thẻ bài. Đọc phần phản biện Socratic chi tiết giúp bạn hiểu rõ nguyên nhân lỗi sai và ghi nhớ bài học sâu sắc hơn!</p>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="btn-draw" style="padding: 10px 25px;" onclick="closeGuide()">Đã Hiểu, Bắt Đầu Chơi!</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // Đường link API Web App của bạn từ Apps Script
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw12itK3q9xKfFdsGp7G9DjKRsBCHjsQ_JhXf6CFP5muJHYmnut3cpo0N9anrKy6b0hag/exec';
@@ -277,15 +425,16 @@
     let questionsDatabase = [];
     let currentCard = null;
 
+    // Chuẩn hóa tên môn để lọc không bị sót
     function normalizeSubject(str) {
         if (!str) return '';
-        str = str.toString().trim().toLowerCase();
-        if (str.includes('toán') || str.includes('toan')) return 'toan';
-        if (str.includes('lý') || str.includes('ly')) return 'ly';
-        if (str.includes('hóa') || str.includes('hoa')) return 'hoa';
-        if (str.includes('sinh')) return 'sinh';
-        if (str.includes('văn') || str.includes('van')) return 'van';
-        return str;
+        const s = str.toString().trim().toLowerCase();
+        if (s === 'toan' || s === 'toán' || s === 'môn toán') return 'toan';
+        if (s === 'ly' || s === 'lý' || s === 'vật lý' || s === 'môn vật lý') return 'ly';
+        if (s === 'hoa' || s === 'hóa' || s === 'hóa học' || s === 'môn hóa học') return 'hoa';
+        if (s === 'sinh' || s === 'sinh học' || s === 'môn sinh học') return 'sinh';
+        if (s === 'van' || s === 'văn' || s === 'ngữ văn' || s === 'môn ngữ văn') return 'van';
+        return s;
     }
 
     async function loadQuestions() {
@@ -330,7 +479,7 @@
         });
 
         if (filtered.length === 0) {
-            alert(`Không tìm thấy câu hỏi cho Lớp ${grade} - Môn ${subject.toUpperCase()}!`);
+            alert(`Không tìm thấy câu hỏi cho Lớp ${grade} - Môn ${getSubjectName(subject)}!`);
             return;
         }
 
@@ -361,6 +510,11 @@
         }
 
         document.getElementById('detailedExplanationText').innerText = currentCard.detailedExplanation || 'Chưa có giải thích chi tiết.';
+
+        // Yêu cầu MathJax render công thức toán tự động (nếu có)
+        if (window.MathJax) {
+            MathJax.typesetPromise();
+        }
     }
 
     function getSubjectName(code) {
@@ -381,6 +535,9 @@
             return;
         }
         document.getElementById('cardElement').classList.add('flipped');
+        if (window.MathJax) {
+            MathJax.typesetPromise();
+        }
     }
 
     function flipToFront() {
@@ -395,6 +552,26 @@
         if (type === 'answer') {
             const answerBox = document.getElementById('answerBox');
             answerBox.style.display = answerBox.style.display === 'block' ? 'none' : 'block';
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        }
+    }
+
+    // Các hàm xử lý đóng/mở Cửa Sổ Hướng Dẫn Chơi
+    function openGuide() {
+        document.getElementById('guideModal').style.display = 'flex';
+    }
+
+    function closeGuide() {
+        document.getElementById('guideModal').style.display = 'none';
+    }
+
+    // Đóng cửa sổ khi click ngoài vùng modal
+    window.onclick = function(event) {
+        const modal = document.getElementById('guideModal');
+        if (event.target === modal) {
+            modal.style.display = 'none';
         }
     }
 
